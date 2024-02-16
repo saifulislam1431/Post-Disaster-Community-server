@@ -22,15 +22,18 @@ async function run() {
         await client.connect();
         console.log("Connected to MongoDB");
 
-        const db = client.db('assignment');
-        const collection = db.collection('users');
+        const db = client.db('supplyChainPlatform');
+        const userCollection = db.collection('users');
+        const allSupplyCollection = db.collection("allSupplyPost");
+        const testimonialCollection = db.collection("testimonials");
+        const galleryCollection = db.collection("gallery");
 
         // User Registration
         app.post('/api/v1/register', async (req, res) => {
             const { name, email, password } = req.body;
 
             // Check if email already exists
-            const existingUser = await collection.findOne({ email });
+            const existingUser = await userCollection.findOne({ email });
             if (existingUser) {
                 return res.status(400).json({
                     success: false,
@@ -42,7 +45,7 @@ async function run() {
             const hashedPassword = await bcrypt.hash(password, 10);
 
             // Insert user into the database
-            await collection.insertOne({ name, email, password: hashedPassword });
+            await userCollection.insertOne({ name, email, password: hashedPassword });
 
             res.status(201).json({
                 success: true,
@@ -55,7 +58,7 @@ async function run() {
             const { email, password } = req.body;
 
             // Find user by email
-            const user = await collection.findOne({ email });
+            const user = await userCollection.findOne({ email });
             if (!user) {
                 return res.status(401).json({ message: 'Invalid email or password' });
             }
@@ -75,6 +78,17 @@ async function run() {
                 token
             });
         });
+
+        app.get('/api/v1/all-post', async (req, res) => {
+            try {
+                const result = await allSupplyCollection.find({}).toArray();
+                return res.send(result)
+            } catch {
+                return res.status(401).json({ message: 'Something wrong!' });
+            }
+        })
+
+
 
 
         // ==============================================================
