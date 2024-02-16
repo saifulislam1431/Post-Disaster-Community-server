@@ -86,6 +86,23 @@ async function run() {
             } catch {
                 return res.status(401).json({ message: 'Something wrong!' });
             }
+        });
+        app.get('/api/v1/all-testimonial', async (req, res) => {
+            try {
+                const result = await testimonialCollection.find({}).toArray();
+                return res.send(result)
+            } catch {
+                return res.status(401).json({ message: 'Something wrong!' });
+            }
+        })
+
+        app.get('/api/v1/all-work-portfolio', async (req, res) => {
+            try {
+                const result = await galleryCollection.find({}).toArray();
+                return res.send(result)
+            } catch {
+                return res.status(401).json({ message: 'Something wrong!' });
+            }
         })
 
 
