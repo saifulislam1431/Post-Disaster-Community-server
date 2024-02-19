@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
@@ -9,7 +9,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
 // MongoDB Connection URL
@@ -27,6 +27,8 @@ async function run() {
         const allSupplyCollection = db.collection("allSupplyPost");
         const testimonialCollection = db.collection("testimonials");
         const galleryCollection = db.collection("gallery");
+        const eventCollection = db.collection("upcomingEvents");
+        const statisticsCollection = db.collection("statisticsData");
 
         // User Registration
         app.post('/api/v1/register', async (req, res) => {
@@ -87,6 +89,59 @@ async function run() {
                 return res.status(401).json({ message: 'Something wrong!' });
             }
         });
+        app.post('/api/v1/add-post', async (req, res) => {
+            try {
+                const data = req.body;
+                const result = await allSupplyCollection.insertOne(data);
+                return res.json({
+                    success: true,
+                    insertedId: result.insertedId,
+                    message: 'Post Added successfully!',
+                })
+            } catch {
+                return res.status(401).json({ message: 'Something wrong!' });
+            }
+        });
+
+        app.delete('/api/v1/delete-post/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) }
+                const result = await allSupplyCollection.deleteOne(filter);
+                return res.json({
+                    success: true,
+                    deletedCount: result.deletedCount,
+                    message: 'Deleted successfully!',
+                })
+            } catch {
+                return res.status(401).json({ message: 'Something wrong!' });
+            }
+        });
+
+        app.patch('/api/v1/update-post/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                const data = req.body;
+                const filter = { _id: new ObjectId(id) }
+                const doc = {
+                    $set: {
+                        title: data?.title,
+                        description: data?.description,
+                        amount: data?.amount,
+                        category: data?.category
+                    }
+                }
+                const result = await allSupplyCollection.updateOne(filter, doc);
+                return res.json({
+                    success: true,
+                    modifiedCount: result.modifiedCount,
+                    message: 'Update successfully!',
+                })
+            } catch {
+                return res.status(401).json({ message: 'Something wrong!' });
+            }
+        });
+
         app.get('/api/v1/all-testimonial', async (req, res) => {
             try {
                 const result = await testimonialCollection.find({}).toArray();
@@ -99,6 +154,35 @@ async function run() {
         app.get('/api/v1/all-work-portfolio', async (req, res) => {
             try {
                 const result = await galleryCollection.find({}).toArray();
+                return res.send(result)
+            } catch {
+                return res.status(401).json({ message: 'Something wrong!' });
+            }
+        })
+
+        app.get('/api/v1/upcoming-events', async (req, res) => {
+            try {
+                const result = await eventCollection.find({}).toArray();
+                return res.send(result)
+            } catch {
+                return res.status(401).json({ message: 'Something wrong!' });
+            }
+        })
+
+        app.get('/api/v1/single-post-details/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+                const result = await allSupplyCollection.findOne(filter);
+                return res.send(result)
+            } catch {
+                return res.status(401).json({ message: 'Something wrong!' });
+            }
+        })
+
+        app.get('/api/v1/statistics-data', async (req, res) => {
+            try {
+                const result = await statisticsCollection.find({}).toArray();
                 return res.send(result)
             } catch {
                 return res.status(401).json({ message: 'Something wrong!' });
