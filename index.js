@@ -9,7 +9,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({ origin: 'https://post-disaster-supply-chain.web.app', credentials: true }));
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
 // MongoDB Connection URL
@@ -29,6 +29,7 @@ async function run() {
         const galleryCollection = db.collection("gallery");
         const eventCollection = db.collection("upcomingEvents");
         const statisticsCollection = db.collection("statisticsData");
+        const donorsCollection = db.collection("donors");
 
         // User Registration
         app.post('/api/v1/register', async (req, res) => {
@@ -183,6 +184,15 @@ async function run() {
         app.get('/api/v1/statistics-data', async (req, res) => {
             try {
                 const result = await statisticsCollection.find({}).toArray();
+                return res.send(result)
+            } catch {
+                return res.status(401).json({ message: 'Something wrong!' });
+            }
+        })
+
+        app.get('/api/v1/donors-data-by-donation', async (req, res) => {
+            try {
+                const result = await donorsCollection.find({}).sort({ donationAmount: -1 }).toArray();
                 return res.send(result)
             } catch {
                 return res.status(401).json({ message: 'Something wrong!' });
