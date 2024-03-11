@@ -30,6 +30,7 @@ async function run() {
         const eventCollection = db.collection("upcomingEvents");
         const statisticsCollection = db.collection("statisticsData");
         const donorsCollection = db.collection("donors");
+        const volunteersCollection = db.collection("volunteers");
 
         // User Registration
         app.post('/api/v1/register', async (req, res) => {
@@ -197,6 +198,18 @@ async function run() {
             } catch {
                 return res.status(401).json({ message: 'Something wrong!' });
             }
+        })
+
+        // Volunteer
+        app.post("/api/v1/create-volunteer", async (req, res) => {
+            const data = req.body;
+            const result = await volunteersCollection.insertOne(data);
+            return res.send(result);
+        })
+
+        app.get("/api/v1/get-all-volunteer", async (req, res) => {
+            const result = await volunteersCollection.find({}).toArray();
+            return res.send(result)
         })
 
 
