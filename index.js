@@ -31,10 +31,11 @@ async function run() {
         const statisticsCollection = db.collection("statisticsData");
         const donorsCollection = db.collection("donors");
         const volunteersCollection = db.collection("volunteers");
+        const postCollection = db.collection("posts");
 
         // User Registration
         app.post('/api/v1/register', async (req, res) => {
-            const { name, email, password } = req.body;
+            const { name, email, password, imageURL, date } = req.body;
 
             // Check if email already exists
             const existingUser = await userCollection.findOne({ email });
@@ -49,7 +50,7 @@ async function run() {
             const hashedPassword = await bcrypt.hash(password, 10);
 
             // Insert user into the database
-            await userCollection.insertOne({ name, email, password: hashedPassword });
+            await userCollection.insertOne({ name, email, password: hashedPassword, imageURL: imageURL ? imageURL : "", date });
 
             res.status(201).json({
                 success: true,
@@ -74,7 +75,7 @@ async function run() {
             }
 
             // Generate JWT token
-            const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: process.env.EXPIRES_IN });
+            const token = jwt.sign({ email: user.email, imageURL: user?.imageURL ? user?.imageURL : "", name: user?.name }, process.env.JWT_SECRET, { expiresIn: process.env.EXPIRES_IN });
 
             res.json({
                 success: true,
@@ -153,6 +154,16 @@ async function run() {
             }
         })
 
+        app.post("/api/v1/create-new-testimonial", async (req, res) => {
+            try {
+                const newData = req.body;
+                const result = await testimonialCollection.insertOne(newData);
+                return res.send(result)
+            } catch {
+                return res.status(401).json({ message: 'Something wrong!' });
+            }
+        })
+
         app.get('/api/v1/all-work-portfolio', async (req, res) => {
             try {
                 const result = await galleryCollection.find({}).toArray();
@@ -209,6 +220,17 @@ async function run() {
 
         app.get("/api/v1/get-all-volunteer", async (req, res) => {
             const result = await volunteersCollection.find({}).toArray();
+            return res.send(result)
+        })
+
+        app.post("/api/v1/post-community-post", async (req, res) => {
+            const data = req.body;
+            const result = await postCollection.insertOne(data);
+            return res.send(result);
+        })
+
+        app.get("/api/v1/get-community-post", async (req, res) => {
+            const result = await postCollection.find({}).toArray();
             return res.send(result)
         })
 
